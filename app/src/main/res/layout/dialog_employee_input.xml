@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp">
+
+    <EditText
+        android:id="@+id/txtSSN"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Your SSN"
+        android:inputType="text"/>
+    <EditText
+        android:id="@+id/txtFName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Your first name"
+        android:inputType="text"/>
+    <EditText
+        android:id="@+id/txtLName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Your last name"
+        android:inputType="text"/>
+    <EditText
+        android:id="@+id/txtYear"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Your year of birth"
+        android:inputType="numberDecimal"/>
+    <EditText
+        android:id="@+id/txtCity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Your salary"
+        android:inputType="text"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            />
+        <Button
+            android:id="@+id/btnAdd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Record"/>
+    </LinearLayout>
+
+</LinearLayout>

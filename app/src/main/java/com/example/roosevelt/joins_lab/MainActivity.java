@@ -1,17 +1,52 @@
 package com.example.roosevelt.joins_lab;
 
+import android.content.Context;
+import android.content.DialogInterface;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.CursorAdapter;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.w3c.dom.Text;
+import org.w3c.dom.ls.LSResourceResolver;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.validation.Validator;
 
 public class MainActivity extends AppCompatActivity {
-    RecyclerView mRecyclerView;
+    ListView listView ;
+
+    Button btnAddData;
+    Button btnSameCompany;
+    Button btnBoston;
+    Button btnHighestSalary;
+
+    TextView txtResult;
+
+    CursorAdapter cursorAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,16 +55,120 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        listView = (ListView) findViewById(R.id.listView);
 
+        btnAddData = (Button) findViewById(R.id.btnAdd);
+        btnSameCompany = (Button) findViewById(R.id.btnSameCompany);
+        btnBoston = (Button) findViewById(R.id.btnCompaniesInBoston);
+        btnHighestSalary = (Button) findViewById(R.id.btnHighestSalary);
 
+        txtResult = (TextView) findViewById(R.id.txtResult);
+
+        btnAddData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addRecords();
+            }
+        });
+
+        btnSameCompany.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Cursor cursor = DatabaseHelper.getInstance(MainActivity.this).getEmployeesInSameCompany();
+                displayEmployeeNamesInListView(cursor);
+            }
+        });
+
+        btnBoston.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Cursor cursor = DatabaseHelper.getInstance(MainActivity.this).getCompaniesFromBoston();
+                displayCompanyNamesInListView(cursor);
+            }
+        });
+
+        btnHighestSalary.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                txtResult.setText(String.format(Locale.ENGLISH, "Result: %s",
+                        DatabaseHelper.getInstance(MainActivity.this).getCompanyWithHighestSalary()));
+            }
+        });
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+
+                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                final View v = getLayoutInflater().from(MainActivity.this)
+                        .inflate(R.layout.dialog_employee_input, null);
+                builder.setTitle("Add New Employee Record")
+                        .setView(v)
+                        .create();
+                final AlertDialog ad = builder.show();
+
+                final Button btnAdd = (Button) v.findViewById(R.id.btnAdd);
+                final Button btnCancel = (Button) v.findViewById(R.id.btnCancel);
+
+                btnAdd.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        //check input, set errors and save to database
+                        EditText txtSSN = (EditText) v.findViewById(R.id.txtSSN);
+                        EditText txtFName = (EditText) v.findViewById(R.id.txtFName);
+                        EditText txtLName = (EditText) v.findViewById(R.id.txtLName);
+                        EditText txtYOB = (EditText) v.findViewById(R.id.txtYear);
+                        EditText txtCity = (EditText) v.findViewById(R.id.txtCity);
+
+                        List<EditText> txtInputs = new LinkedList<>();
+                        txtInputs.add(txtSSN);
+                        txtInputs.add(txtFName);
+                        txtInputs.add(txtLName);
+                        txtInputs.add(txtYOB);
+                        txtInputs.add(txtCity);
+                        List<String> inputs = new LinkedList<>();
+                        for (EditText txtInput : txtInputs)
+                            inputs.add(txtInput.getText().toString().trim());
+
+                        if (inputs.get(0).equals("") || inputs.get(1).equals("")
+                                || inputs.get(2).equals("") || inputs.get(3).equals("")
+                                || inputs.get(4).equals("")) {
+                            for (EditText txtInput : txtInputs)
+                                if (txtInput.getText().toString().trim().equals(""))
+                                    txtInput.setError("Required");
+                        }
+                        else {
+                            //save object here
+                            Employee newEmployee = new Employee(inputs.get(0),
+                                    inputs.get(1), inputs.get(2),
+                                    Integer.parseInt(inputs.get(3)),
+                                    inputs.get(4));
+                            DatabaseHelper.getInstance(MainActivity.this)
+                                    .insertRowEmployee(newEmployee);
+
+                            //make toast or snack bar
+                            Toast.makeText(MainActivity.this, "You have added a new employee.",
+                                    Toast.LENGTH_SHORT).show();
+
+                            //display updated employee list
+                            Cursor cursor = DatabaseHelper.getInstance(MainActivity.this)
+                                    .getAllEmployees();
+                            displayEmployeeNamesInListView(cursor);
+                            ad.dismiss();
+                        }
+                    }
+                });
+
+                btnCancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        ad.dismiss();
+
+                    }
+                });
+
+
             }
         });
     }
@@ -102,4 +241,80 @@ public class MainActivity extends AppCompatActivity {
         //close db
         db.close();
     }
+
+    private void displayEmployeeNamesInListView(Cursor cursor){
+        cursorAdapter = new CursorAdapter(this, cursor, android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER) {
+            @Override
+            public View newView(Context context, Cursor cursor, ViewGroup parent) {
+                return getLayoutInflater().from(MainActivity.this)
+                        .inflate(R.layout.employee_item_layout, parent, false);
+            }
+
+            @Override
+            public void bindView(View view, Context context, Cursor cursor) {
+                TextView txtName = (TextView) view.findViewById(R.id.txtName);
+
+                String fName = cursor.getString(cursor.getColumnIndex(DatabaseHelper.COL_FIRST_NAME));
+                String lName = cursor.getString(cursor.getColumnIndex(DatabaseHelper.COL_LAST_NAME));
+
+                Log.i("asdasdasd", fName + " " + lName);
+                txtName.setText(fName + " " + lName);
+            }
+        };
+
+        listView.setAdapter(cursorAdapter);
+
+    }
+    private void displayCompanyNamesInListView(Cursor cursor){
+        cursorAdapter = new CursorAdapter(this, cursor, android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER) {
+            @Override
+            public View newView(Context context, Cursor cursor, ViewGroup parent) {
+                return getLayoutInflater().from(MainActivity.this)
+                        .inflate(R.layout.employee_item_layout, parent, false);
+            }
+
+            @Override
+            public void bindView(View view, Context context, Cursor cursor) {
+                TextView txtName = (TextView) view.findViewById(R.id.txtName);
+
+                String companyName = cursor.getString(cursor.getColumnIndex(DatabaseHelper.COL_COMPANY));
+
+                Log.i("asdasdasd", companyName);
+                txtName.setText(companyName);
+            }
+        };
+
+        listView.setAdapter(cursorAdapter);
+
+    }
+
+    private void displayCompanyNameAndSalary(Cursor cursor){
+
+        cursorAdapter = new CursorAdapter(this, cursor, android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER) {
+            @Override
+            public View newView(Context context, Cursor cursor, ViewGroup parent) {
+                return getLayoutInflater().from(MainActivity.this)
+                        .inflate(R.layout.job_item_layout, parent, false);
+            }
+
+            @Override
+            public void bindView(View view, Context context, Cursor cursor) {
+                TextView txtName = (TextView) view.findViewById(R.id.txtCompanyName);
+                TextView txtSalary = (TextView) view.findViewById(R.id.txtSalary);
+
+                String companyName = cursor.getString(cursor.getColumnIndex(DatabaseHelper.COL_COMPANY));
+                int salary = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.COL_SALARY));
+
+                Log.i("asdasdasd", companyName);
+                txtName.setText(companyName);
+                txtSalary.setText(String.valueOf(salary));
+            }
+        };
+
+        listView.setAdapter(cursorAdapter);
+
+    }
+
+
+
 }
