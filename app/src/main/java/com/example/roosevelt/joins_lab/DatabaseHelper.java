@@ -92,14 +92,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insertOrThrow(EMPLOYEE_TABLE_NAME, null, values);
     }
 
-    public void insertRowJob(Job job) {
+    public long insertRowJob(Job job) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COL_COMPANY, job.getCompany());
         values.put(COL_SALARY, job.getSalary());
         values.put(COL_EXPERIENCE, job.getExperience());
         values.put(COL_EMP_ID, job.getEmpSSN());
-        db.insertOrThrow(JOB_TABLE_NAME, null, values);
+        return db.insertOrThrow(JOB_TABLE_NAME, null, values);
     }
     /**
      builder.setTables(String.format(Locale.ENGLISH, "%s JOIN %s ON %s.%s=%s.%s",

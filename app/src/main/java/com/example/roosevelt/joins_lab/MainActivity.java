@@ -67,7 +67,14 @@ public class MainActivity extends AppCompatActivity {
         btnAddData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addRecords();
+                Cursor cursor = DatabaseHelper.getInstance(MainActivity.this).getAllEmployees();
+                if (cursor.getCount() == 0){
+                    addRecords();
+                }
+                else {
+                    Toast.makeText(MainActivity.this, "Cannot add again, duplicate SSNs exist",
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -163,12 +170,12 @@ public class MainActivity extends AppCompatActivity {
                 btnCancel.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        Cursor cursor = DatabaseHelper.getInstance(MainActivity.this)
+                                .getAllEmployees();
+                        displayEmployeeNamesInListView(cursor);
                         ad.dismiss();
-
                     }
                 });
-
-
             }
         });
     }
